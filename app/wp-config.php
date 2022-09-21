@@ -45,9 +45,9 @@ define('AS3CF_SETTINGS', serialize(array(
 	'bucket' => $_ENV['WP_S3_BUCKET']
 )));
 
-define( 'FORCE_SSL', true );
-define( 'FORCE_SSL_ADMIN', true );
-$_SERVER['HTTPS']='true';
+// define( 'FORCE_SSL', true );
+// define( 'FORCE_SSL_ADMIN', true );
+// $_SERVER['HTTPS']='true';
 
 /**#@+
  * Authentication unique keys and salts.
