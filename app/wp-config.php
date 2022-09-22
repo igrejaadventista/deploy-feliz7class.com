@@ -1,8 +1,8 @@
 <?php
 //Begin Really Simple SSL session cookie settings
-@ini_set('session.cookie_httponly', true);
-@ini_set('session.cookie_secure', true);
-@ini_set('session.use_only_cookies', true);
+// @ini_set('session.cookie_httponly', true);
+// @ini_set('session.cookie_secure', true);
+// @ini_set('session.use_only_cookies', true);
 //END Really Simple SSL
 /**
  * The base configuration for WordPress
@@ -50,9 +50,9 @@ define('AS3CF_SETTINGS', serialize(array(
 	'bucket' => $_ENV['WP_S3_BUCKET']
 )));
 
-define( 'FORCE_SSL', true );
-define( 'FORCE_SSL_ADMIN', true );
-$_SERVER['HTTPS']='true';
+define('FORCE_SSL', true);
+define('FORCE_SSL_ADMIN', true);
+$_SERVER['HTTPS'] = 'on';
 
 /**#@+
  * Authentication unique keys and salts.
