@@ -57,6 +57,14 @@ class UniteCreatorSettingsMultisource{
 		
 		UniteFunctionsUC::validateNotEmpty($this->settings, "settings object");
 		
+		$includedAttributes = UniteFunctionsUC::getVal($param, "multisource_included_attributes");
+		
+		$includedAttributes = trim($includedAttributes);
+		
+		$arrIncludedAttributes = explode(",", $includedAttributes);
+		
+		$arrIncludedAttributes = UniteFunctionsUC::arrayToAssoc($arrIncludedAttributes);
+		
 		
 		//------ items source ------
 		
@@ -91,15 +99,41 @@ class UniteCreatorSettingsMultisource{
 		
 		$this->settings->addSelect($name."_source", $arrSource, __("Items Source", "unlimited-elements-for-elementor"), "items", $params);
 		
-		
-		$this->addMultisourceConnectors_posts($name);
+		$this->addMultisourceConnectors_posts($name, $arrIncludedAttributes);
 		
 	}
 	
 	/**
+	 * filter params by included attributes array
+	 */
+	private function filterParamItemsByIncludedAttributes($params, $arrIncludedAttributes){
+		
+		if(empty($params))
+			return($params);
+			
+		if(empty($arrIncludedAttributes))
+			return($params);
+		
+		$arrParamsNew = array();
+		
+		foreach($params as $param){
+			
+			$name = UniteFunctionsUC::getVal($param, "name");
+			
+			if(isset($arrIncludedAttributes[$name]) == false)
+				continue;
+				
+			$arrParamsNew[] = $param;
+		}
+		
+		return($arrParamsNew);
+	}
+	
+	
+	/**
 	 * add multisource connectors
 	 */
-	private function addMultisourceConnectors_posts($name){
+	private function addMultisourceConnectors_posts($name, $arrIncludedAttributes){
 		
 		if(empty($this->objAddon))
 			return(false);
@@ -110,6 +144,8 @@ class UniteCreatorSettingsMultisource{
 			return(false);
 		
 		$paramsItems = $this->objAddon->getParamsItems();
+		
+		$paramsItems = $this->filterParamItemsByIncludedAttributes($paramsItems, $arrIncludedAttributes);
 		
 		if(empty($paramsItems))
 			return(false);
@@ -149,8 +185,6 @@ class UniteCreatorSettingsMultisource{
 		$params["elementor_condition"] = $condition;
 		
 		$this->settings->addRadioBoolean($name."_show_metafields", __("Debug - Show Meta Fields", "unlimited-elements-for-elementor"), false, "Yes", "No", $params);
-		
-		
 		
 	}
 	

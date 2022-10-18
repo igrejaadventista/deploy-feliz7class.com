@@ -1504,7 +1504,13 @@ defined('UNLIMITED_ELEMENTS_INC') or die('Restricted access');
 		 * get term meta
 		 */
 		public static function getTermImage($termID, $metaKey){
-						
+			
+			if(empty($termID) || $termID === "current")
+				$termID = self::getCurrentTermID();
+			
+			if(empty($termID))
+				return(null);
+			
 			if(empty($metaKey))
 				return(null);
 
@@ -2187,6 +2193,44 @@ defined('UNLIMITED_ELEMENTS_INC') or die('Restricted access');
 			return($content);
 		}
 		
+		/**
+		 * get next or previous post
+		 */
+		public static function getNextPrevPostData($type = "next", $taxonomy = "category"){
+			
+			if(empty($taxonomy))
+				$taxonomy = "category";
+			
+			if(empty($type))
+				$type = "next";
+				
+			$previous = !($type == "next");
+			
+			if ( $previous && is_attachment() ) {
+				$post = get_post( get_post()->post_parent );
+			} else {
+				$in_same_term = false;
+				$excluded_terms = '';
+				
+				$post = get_adjacent_post( $in_same_term, $excluded_terms, $previous, $taxonomy );
+			}
+			
+			if(empty($post))
+				return(null);
+				
+			$title = $post->post_title;
+			
+			$link = get_permalink($post);
+			
+			$output = array();
+			
+			$output["title"] = $title;
+			$output["link"] = $link;
+			
+			return($output);
+		}
+		
+		
 		public static function a__________POST_ACTIONS_________(){}
 		
 		
@@ -2718,6 +2762,30 @@ defined('UNLIMITED_ELEMENTS_INC') or die('Restricted access');
 		
 		public static function a___________USER_DATA__________(){}
 		
+		
+		/**
+		 *
+		 * validate permission that the user is admin, and can manage options.
+		 */
+		public static function isAdminPermissions(){
+			
+			if( is_admin() &&  current_user_can("manage_options") )
+				return(true);
+		
+			return(false);
+		}
+		
+		/**
+		 * check if current user has some permissions
+		 */
+		public static function isCurrentUserHasPermissions(){
+			
+			$canEdit = current_user_can("manage_options");
+			
+			return($canEdit);
+		}
+		
+		
 		/**
 		 * get keys of user meta
 		 */
@@ -3191,18 +3259,6 @@ defined('UNLIMITED_ELEMENTS_INC') or die('Restricted access');
 			$table = $wpdb->get_var($sql);
 		
 			if($table == $tableName)
-				return(true);
-		
-			return(false);
-		}
-		
-		/**
-		 *
-		 * validate permission that the user is admin, and can manage options.
-		 */
-		public static function isAdminPermissions(){
-		
-			if( is_admin() &&  current_user_can("manage_options") )
 				return(true);
 		
 			return(false);

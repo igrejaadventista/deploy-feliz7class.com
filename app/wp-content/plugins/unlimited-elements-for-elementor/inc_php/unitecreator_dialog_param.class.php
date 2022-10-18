@@ -891,6 +891,26 @@ class UniteCreatorDialogParamWork{
 		
 		</div>
 		
+		<!-- Items  -->
+		<div class="uc-listing-param-options" data-control="items">
+		
+			<div class="unite-inputs-sap-double"></div>
+				
+			<label class="unite-inputs-label">
+				<?php _e("Included Attributes", "unlimited-elements-for-elementor")?>: 
+			</label>
+			
+			<div class="unite-inputs-sap"></div>
+			
+			<input type="text" name="multisource_included_attributes" value="" class="unite-input-link">
+					
+			<br><br>
+			
+			* <?php esc_html_e("list here all the fields that will be included in the multisource comma saparated like ","unlimited-elements-for-elementor")?> 
+				<b>title,image,other</b>		
+		</div>
+		
+		
 		<!-- Remote  -->
 		
 		<div class="uc-listing-param-options" data-control="remote">

@@ -41,6 +41,8 @@
 	delete_option("WpFc_api_key");
 	delete_transient("wpfc_premium_update_info");
 
+	wp_clear_scheduled_hook("wpfc_db_auto_cleanup");
+	
 	foreach ((array)_get_cron_array() as $cron_key => $cron_value) {
 		foreach ( (array) $cron_value as $hook => $events ) {
 			if(preg_match("/^wp\_fastest\_cache/", $hook)){

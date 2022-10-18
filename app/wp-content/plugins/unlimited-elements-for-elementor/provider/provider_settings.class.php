@@ -669,6 +669,16 @@ class UniteCreatorSettings extends UniteCreatorSettingsWork{
 		
 		$this->addRadioBoolean($name."_show_query_debug", __("Show Query Debug", "unlimited-elements-for-elementor"), false, "Yes", "No", $params);
 		
+		//---- query id -----
+				
+		$params = array();
+		$params["origtype"] = UniteCreatorDialogParam::PARAM_TEXTFIELD;
+		$title = __("Query ID", "unlimited-elements-for-elementor");
+		$params["description"] = __("Give your Query unique ID to been able to filter it in server side using add_filter() function. <a href='https://unlimited-elements.com/docs/work-with-query-id-in-terms-selection/'><a target='blank' href='https://unlimited-elements.com/docs/work-with-query-id-in-posts-selection/'>See docs here</a></a>.","unlimited-elements-for-elementor");
+		
+		$this->addTextBox($name."_queryid", "", $title, $params);
+		
+		
 		//--------- debug type terms ---------
 		
 		$params = array();
@@ -1692,6 +1702,24 @@ class UniteCreatorSettings extends UniteCreatorSettingsWork{
 		$params["description"] = "Optional. Select some dynamic field, that has output of post ids (string or array) like 15,40,23";
 		
 		$this->addTextBox($name."_manual_post_ids_dynamic", "", __("Or Select Post IDs by Dynamic Field", "unlimited-elements-for-elementor"), $params);
+
+		// --------- add hr before avoid duplicates -------------
+		
+		$params = array();
+		$params["origtype"] = UniteCreatorDialogParam::PARAM_HR;
+		$params["elementor_condition"] = $arrManualElementorCondition;
+		
+		$this->addHr($name."_before_avoid_duplicates_manual",$params);
+		
+		
+		//----- avoid duplicates -------
+		
+		$params = array();
+		$params["origtype"] = UniteCreatorDialogParam::PARAM_RADIOBOOLEAN;
+		$params["description"] = __("If turned on, those posts in another widgets won't be shown", "unlimited-elements-for-elementor");
+		$params["elementor_condition"] = $arrManualElementorCondition;
+		
+		$this->addRadioBoolean($name."_manual_avoid_duplicates", __("Avoid Duplicates", "unlimited-elements-for-elementor"), false, "Yes", "No", $params);
 		
 		
 		// --------- add hr before exclude -------------
@@ -1752,6 +1780,7 @@ class UniteCreatorSettings extends UniteCreatorSettingsWork{
 		$params["add_dynamic"] = true;
 		
 		$this->addTextBox($name."_exclude_dynamic_field","",__("Exclude Posts by Dynamic Field","unlimited-elements-for-elementor"), $params);
+		
 		
 		
 		//------- Already Fetched --------

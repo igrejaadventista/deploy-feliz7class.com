@@ -14,7 +14,7 @@ class UniteCreatorWooIntegrate{
 	
 	const POST_TYPE_PRODUCT = "product";
 	const PRODUCT_TYPE_VARIABLE = "variable";
-		
+	
 	private $currency;
 	private $currencySymbol;
 	private $urlCheckout;
@@ -436,6 +436,35 @@ class UniteCreatorWooIntegrate{
 		return($arrOutput);
 	}
 	
+	/**
+	 * combine by name
+	 */
+	private function combineAttributesByName($arrAttributes){
+		
+		if(empty($arrAttributes))
+			return($arrAttributes);
+		
+		$arrCombined = array();
+			
+		foreach($arrAttributes as $name=>$arr){
+			
+			$name = UniteFunctionsUC::getVal($arr, "attr");
+			$value = UniteFunctionsUC::getVal($arr, "title");
+			
+			$arrAttribute = UniteFunctionsUC::getVal($arrCombined, $name);
+			
+			if(empty($arrAttribute))
+				$arrAttribute = array();
+				
+			$arrAttribute[] = $value;
+			
+			$arrCombined[$name] = $arrAttribute;
+		}
+		
+		return($arrCombined);
+	}
+	
+	
 	
 	/**
 	 * get product attribute names
@@ -459,6 +488,51 @@ class UniteCreatorWooIntegrate{
 		}	//foreach attributes
 				
 		return($arrOutput);
+	}
+	
+	/**
+	 * convert combined attributes array to text
+	 */
+	private function convertCombinedAttributesToText($arrCombined, $sap = ":", $sapValues = ","){
+		
+		$arrText = array();
+		
+		foreach($arrCombined as $name=>$arrValues){
+				
+			$strValues = implode($sapValues, $arrValues);
+			
+			$text = "{$name}{$sap} $strValues";
+			
+			$arrText[] = $text;
+		}
+		
+		return($arrText);
+	}
+	
+	
+	/**
+	 * get product attributes
+	 */
+	public function getProductAttributes($productID){
+		
+		if(function_exists("wc_get_product") == false)
+			return(array());
+		
+		$product = wc_get_product($productID);
+		
+		if(empty($product))
+			return(array());
+		
+		$arrAttributeTitles = $this->getProductAttributeNames($product);
+		
+		$arrCombined = $this->combineAttributesByName($arrAttributeTitles);
+		
+		if(empty($arrCombined))
+			return($arrCombined);
+		
+		$arrText = $this->convertCombinedAttributesToText($arrCombined);
+
+		return($arrText);
 	}
 	
 	
@@ -683,7 +757,7 @@ class UniteCreatorWooIntegrate{
     	//put add to cart link
     	$arrProduct = $this->addAddToCartData($arrProduct, $productID, $productSku);
     	
-    	
+    	    	
     	return($arrProduct);
 	}
 	

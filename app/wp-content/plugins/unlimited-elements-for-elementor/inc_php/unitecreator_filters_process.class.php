@@ -12,6 +12,8 @@ class UniteCreatorFiltersProcess{
 	const DEBUG_MAIN_QUERY = false;
 	
 	const DEBUG_FILTER = false;
+
+	private static $showDebug = false;
 	
 	private static $filters = null;
 	private static $arrInputFiltersCache = null;
@@ -26,7 +28,6 @@ class UniteCreatorFiltersProcess{
 	private static $isModeReplace = false;
 	private static $numTotalPosts;
 	
-	private static $showDebug = false;
 	private static $originalQueryVars = null;
 	private $contentWidgetsDebug = array();
 	private static $lastArgs = null;	
@@ -337,7 +338,18 @@ class UniteCreatorFiltersProcess{
 		
 		if(!empty($search))
 			$arrOutput["search"] = $search;
+
+		//exclude
+		$exclude = UniteFunctionsUC::getVal($request, "ucexclude");
 		
+		if(!empty($exclude)){
+			
+			$isValid = UniteFunctionsUC::isValidIDsList($exclude);
+			
+			if($isValid == true)
+				$arrOutput["exclude"] = $exclude;
+		}
+			
 		self::$arrInputFiltersCache = $arrOutput;
 		
 		return($arrOutput);
@@ -425,6 +437,12 @@ class UniteCreatorFiltersProcess{
 		
 		if(!empty($search))
 			self::$filters["search"] = $search;
+		
+		//get exclude
+		$exclude = UniteFunctionsUC::getVal($arrInputFilters, "exclude");
+		
+		if(!empty($exclude))
+			self::$filters["exclude"] = $exclude;
 		
 		
 		return(self::$filters);
@@ -562,12 +580,14 @@ class UniteCreatorFiltersProcess{
 		
 		$arrFilters = $this->getRequestFilters();
 		
+		
 		//---- set offset and count ----
 		
 		$page = UniteFunctionsUC::getVal($arrFilters, "page");
 		$numItems = UniteFunctionsUC::getVal($arrFilters, "num_items");
 		$offset = UniteFunctionsUC::getVal($arrFilters, "offset");
 		$search = UniteFunctionsUC::getVal($arrFilters, "search");
+		$exclude = UniteFunctionsUC::getVal($arrFilters, "exclude");
 		
 		
 		if(!empty($page))
@@ -586,7 +606,6 @@ class UniteCreatorFiltersProcess{
 		if(!empty($search))
 			$args["s"] = $search;
 		
-		
 		$arrTerms = UniteFunctionsUC::getVal($arrFilters, "terms");
 		if(!empty($arrTerms)){
 			
@@ -595,15 +614,34 @@ class UniteCreatorFiltersProcess{
 			
 			if(!empty($arrTaxQuery))
 				$args = $this->setArgsTaxQuery($args, $arrTaxQuery);
+		}
+		
+		//exclude
+		if(!empty($exclude)){
+			
+			$arrExclude = explode(",", $exclude);
+			
+			$arrExclude = array_unique($arrExclude);
+			
+			$arrNotIn = UniteFunctionsUC::getVal($args, "post__not_in");
+			
+			if(empty($arrNotIn))
+				$arrNotIn = array();
+				
+			$arrNotIn = array_merge($arrNotIn, $arrExclude);
+			
+			$args["post__not_in"] = $arrExclude;
 			
 		}
 		
 		
-		if(self::DEBUG_FILTER == true){
-			dmp("debug!!!");
+		if(self::$showDebug == true){
+			
+			dmp("args:");
 			dmp($args);
+			
+			dmp("filters:");
 			dmp($arrFilters);
-			exit();
 		}
 		
 		
@@ -742,13 +780,16 @@ class UniteCreatorFiltersProcess{
 		//------ get the html output
 				
 		//collect the debug html
-		ob_start();
-					
+		if(self::$showDebug == false)
+			ob_start();
+		
 		$objOutput = new UniteCreatorOutput();
 		$objOutput->initByAddon($addon);
 		
-		$htmlDebug = ob_get_contents();
-		ob_end_clean();
+		if(self::$showDebug == false){
+			$htmlDebug = ob_get_contents();
+			ob_end_clean();
+	  	}
 		
 		$output = array();
 		
@@ -772,7 +813,7 @@ class UniteCreatorFiltersProcess{
 		
 		if(!empty($htmlDebug))
 			$output["html_debug"] = $htmlDebug;
-					
+			
 		return($output);
 	}
 	
@@ -969,18 +1010,38 @@ class UniteCreatorFiltersProcess{
 		//find the term id's for test (find or not in the current posts query)
 		if(!empty($testTermIDs)){
 			
+			if(self::$showDebug == true)
+				dmp("---- Test Not Empty Terms----");
+			
 			$args = GlobalsProviderUC::$lastQueryArgs;
+			
+			if(self::$showDebug == true){
+				dmp("--- Last Query Args:");
+				dmp($args);
+			}
 			
 			$query = new WP_Query($args);
 						
 			$request = $query->request;
 						
 			$taxRequest = $this->getInitFiltersTaxRequest($request, $testTermIDs);
-						
+			
+			if(self::$showDebug == true){
+				
+				dmp("---- Terms request: ");
+				dmp($taxRequest);
+			}
+			
 			$db = HelperUC::getDB();
 			$arrFoundTermIDs = $db->fetchSql($taxRequest);
 			
 			$arrFoundTermIDs = $this->modifyFoundTermsIDs($arrFoundTermIDs);
+			
+			if(self::$showDebug == true){
+				
+				dmp("--- result - terms with num posts");
+				dmp($arrFoundTermIDs);
+			}
 			
 			//set the test term id's for the output
 			GlobalsProviderUC::$arrTestTermIDs = $arrFoundTermIDs;			
@@ -1182,20 +1243,43 @@ class UniteCreatorFiltersProcess{
 	
 	/**
 	 * add values to settings from data
+	 * postIDs - exists only if avoid duplicates option set
 	 */
-	public function addWidgetFilterableVarsFromData($data, $dataPosts, $postListName){
+	public function addWidgetFilterableVarsFromData($data, $dataPosts, $postListName, $arrPostIDs = null){
 		
 		//check if ajax related
 		$isAjax = UniteFunctionsUC::getVal($dataPosts, $postListName."_isajax");
 		$isAjax = UniteFunctionsUC::strToBool($isAjax);
-				
-		if($isAjax == false)
+		
+		$addClass = "";
+		$strAttributes = "";
+		
+		//avoid duplicates handle
+		
+		if(!empty($arrPostIDs)){
+			
+			$addClass = " uc-avoid-duplicates";
+			
+			$strPostIDs = implode(",", $arrPostIDs);
+			$strAttributes = " data-postids='$strPostIDs'";
+			
+		}
+		
+		if($isAjax == false){
+			
+			$data["uc_filtering_attributes"] = $strAttributes;
+			$data["uc_filtering_addclass"] = $addClass;
+			
 			return($data);
-				
+		}
+		
+		
+		//all ajax related
+			
+		$addClass .= " uc-filterable-grid";
+		
 		$filterBehavoiur = UniteFunctionsUC::getVal($dataPosts, $postListName."_ajax_seturl");
 		
-		//check if ajax
-		$strAttributes = "";
 		
 		$strAttributes .= " data-ajax='true' ";
 		
@@ -1212,7 +1296,8 @@ class UniteCreatorFiltersProcess{
 		$this->includeClientSideScripts();
 		
 		$data["uc_filtering_attributes"] = $strAttributes;
-		$data["uc_filtering_addclass"] = " uc-filterable-grid";
+		$data["uc_filtering_addclass"] = $addClass;
+		
 		
 		return($data);
 		
@@ -1223,8 +1308,8 @@ class UniteCreatorFiltersProcess{
 	 * add widget variables
 	 * uc_listing_addclass, uc_listing_attributes
 	 */
-	public function addWidgetFilterableVariables($data, $addon){
-		
+	public function addWidgetFilterableVariables($data, $addon, $arrPostIDs = array()){
+				
 		$param = $addon->getParamByType(UniteCreatorDialogParam::PARAM_POSTS_LIST);
 		
 		if(empty($param))
@@ -1233,8 +1318,8 @@ class UniteCreatorFiltersProcess{
 		$postListName = UniteFunctionsUC::getVal($param, "name");
 		
 		$dataPosts = UniteFunctionsUC::getVal($data, $postListName);
-		
-		$data = $this->addWidgetFilterableVarsFromData($data, $dataPosts, $postListName);
+				
+		$data = $this->addWidgetFilterableVarsFromData($data, $dataPosts, $postListName, $arrPostIDs);
 		
 		return($data);
 	}
@@ -1242,10 +1327,12 @@ class UniteCreatorFiltersProcess{
 	
 	/**
 	 * get filters attributes
+	 * get the base url
 	 */
 	private function getFiltersJSData(){
 		
-		$urlBase = UniteFunctionsUC::getBaseUrl(GlobalsUC::$current_page_url);
+		$urlBase = UniteFunctionsUC::getBaseUrl(GlobalsUC::$current_page_url, true);		//strip pagination
+		
 		
 		//include some common url filters
 		$orderby = UniteFunctionsUC::getGetVar("orderby","",UniteFunctionsUC::SANITIZE_TEXT_FIELD);
@@ -1271,13 +1358,21 @@ class UniteCreatorFiltersProcess{
 			$urlBase = UniteFunctionsUC::addUrlParams($urlBase, "s=$search");
 		}
 		
+		//debug client url
+		
+		$isDebug = UniteFunctionsUC::getGetVar("ucfiltersdebug","",UniteFunctionsUC::SANITIZE_TEXT_FIELD);
+		$isDebug = UniteFunctionsUC::strToBool($isDebug);
+		
+		
 		//get current filters
 		
 		$arrData = array();
 		$arrData["urlbase"] = $urlBase;
 		$arrData["urlajax"] = GlobalsUC::$url_ajax_full;
 		
-		//$arrData["querybase"] = self::$originalQueryVars;
+		if($isDebug == true)
+			$arrData["debug"] = true;
+		
 		
 		return($arrData);
 	}
@@ -1428,7 +1523,7 @@ class UniteCreatorFiltersProcess{
 	
 	
 	/**
-	 * modify the selected and add first term if needed
+	 * modify the selected 
 	 */
 	private function modifyOutputTerms_modifySelected($arrTerms, $data, $filterType){
 		
@@ -1441,6 +1536,18 @@ class UniteCreatorFiltersProcess{
 		if($filterType == self::TYPE_SELECT)
 			$isSelectFirst = true;
 		
+		if($filterType == self::TYPE_TABS){
+			
+			$role = UniteFunctionsUC::getVal($data, "filter_role");
+			
+			if($role == "child")
+				$isSelectFirst = false;
+		}
+		
+		
+		if($isSelectFirst == false)
+			return($arrTerms);	
+		
 		$numSelectedTab = UniteFunctionsUC::getVal($data, "selected_tab_number");
 		if(empty($numSelectedTab))
 			$numSelectedTab = 1;
@@ -1451,7 +1558,7 @@ class UniteCreatorFiltersProcess{
 		
 		if($isSelectFirst == true && $numSelectedTab > $numTerms)
 			$numSelectedTab = 1;
-		
+					
 		$firstNotHiddenIndex = null;
 
 		$hasSelected = false;
@@ -1492,8 +1599,8 @@ class UniteCreatorFiltersProcess{
 			return($arrTerms);
 			
 		//make sure the first item selected in select filter
-		
-		$arrTerms[$firstNotHiddenIndex]["isselected"] = true;
+		if($isSelectFirst == true)
+			$arrTerms[$firstNotHiddenIndex]["isselected"] = true;
 		
 		
 		return($arrTerms);
@@ -1539,7 +1646,7 @@ class UniteCreatorFiltersProcess{
 				$isHidden = true;
 			
 			$htmlAttributes = "";
-				
+			
 			if($isHidden == true)
 				$htmlAttributes = "style='display:none'";
 			
@@ -1600,6 +1707,14 @@ class UniteCreatorFiltersProcess{
 			if($isSelected == false)
 				continue;
 			
+			//hidden can't be selected
+			
+			$isHidden = UniteFunctionsUC::getVal($term, "hidden");
+			$isHidden = UniteFunctionsUC::strToBool($isHidden);
+			
+			if($isHidden == true)
+				continue;
+				
 			$class = UniteFunctionsUC::getVal($term, "addclass","");
 			$class .= " uc-selected";
 			
@@ -1764,7 +1879,6 @@ class UniteCreatorFiltersProcess{
 		
 		$arrTerms = $this->modifyOutputTerms_modifySelectedByRequest($arrTerms);
 		
-		
 		$isFilterHidden = false;
 		
 		switch($filterType){
@@ -1789,7 +1903,7 @@ class UniteCreatorFiltersProcess{
 		
 		if($isFilterHidden)
 			$addClass .= " uc-filter-hidden";
-		
+					
 		//return data
 		
 		$data["filter_isajax"] = $isUnderAjax?"yes":"no";
@@ -1799,13 +1913,11 @@ class UniteCreatorFiltersProcess{
 		$data["filter_addclass_item"] = $addClassItem;
 		$data["filter_first_load"] = $isFirstLoad?"yes":"no";
 		
-		
 		$data["taxonomy"] = $arrTerms;
 		
+				
 		return($data);
 	}
-	
-	
 	
 	
 	private function _______ARCHIVE_QUERY__________(){}
@@ -1867,6 +1979,54 @@ class UniteCreatorFiltersProcess{
 	}
 	
 	/**
+	 * just return true
+	 */
+	public function pluginProtection_ezCacheHideComment(){
+		
+		return(true);
+	}
+	
+	
+	/**
+	 * run some cross plugin protections
+	 */
+	private function runSomeCrossPluginProtections(){
+		
+		add_filter("wp_bost_hide_cache_time_comment",array($this, "pluginProtection_ezCacheHideComment"));
+		
+	}
+	
+	/**
+	 * set if show debug or not
+	 */
+	private function setShowDebug(){
+		
+		if(self::DEBUG_FILTER == true){
+			self::$showDebug = true;
+			return(false);
+		}
+		
+		//set debug only for logged in users
+		
+		$isDebug = UniteFunctionsUC::getGetVar("ucfiltersdebug","",UniteFunctionsUC::SANITIZE_TEXT_FIELD);
+		$isDebug = UniteFunctionsUC::strToBool($isDebug);
+		
+		if($isDebug == true){
+			
+			$hasPermissions = UniteFunctionsWPUC::isCurrentUserHasPermissions();
+			
+			if($hasPermissions == true){
+				self::$showDebug = true;
+				
+				dmp("SHOW DEBUG, logged in user");
+			}
+			
+		}
+		
+	}
+	
+	
+	/**
 	 * test the request filter
 	 */
 	public function operateAjaxResponse(){
@@ -1880,6 +2040,10 @@ class UniteCreatorFiltersProcess{
 		
 		if(empty($frontAjaxAction))
 			return(false);
+		
+		$this->runSomeCrossPluginProtections();
+		
+		$this->setShowDebug();
 			
 		try{
 			
@@ -1913,9 +2077,9 @@ class UniteCreatorFiltersProcess{
 				
 		if(is_admin() == true)
 			return(false);
-					
+		
 		add_action("wp", array($this, "operateAjaxResponse"));
-				
+		
 	}
 	
 	

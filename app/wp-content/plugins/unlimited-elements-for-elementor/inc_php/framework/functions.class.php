@@ -1739,14 +1739,29 @@ defined('UNLIMITED_ELEMENTS_INC') or die('Restricted access');
 		 */
 		public static function validateIDsList($val, $fieldName=""){
 			
+			$isValid = self::isValidIDsList($val);
+			
+			if($isValid == false)
+				self::throwError("Field <b>$fieldName</b> allow only numbers and comas.");
+			
+		}
+		
+		
+		/**
+		 * validate id's list, allowed only numbers and commas
+		 * @param $val
+		 */
+		public static function isValidIDsList($val, $fieldName=""){
+			
 			if(empty($val))
 				return(true);
 			
 			$match = preg_match('/^[0-9,]+$/', $val);
 			
 			if($match == 0)
-				self::throwError("Field <b>$fieldName</b> allow only numbers and comas.");
+				return(false);
 				
+			return(true);
 		}
 		
 		

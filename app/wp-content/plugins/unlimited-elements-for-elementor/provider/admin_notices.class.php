@@ -341,6 +341,25 @@ class UniteCreatorAdminNotices{
  				border-color:#ff6a00 !important;
  			}
  			
+ 			.uc-notice-header{
+ 				font-weight:bold;
+ 				font-size:16px;
+ 			}
+ 			
+ 			.uc-notice-middle{
+ 				padding-top:10px;
+ 				padding-bottom:18px;
+ 			}
+ 			
+ 			.uc-notice-wrapper{
+ 				display:flex;
+ 			}
+ 			
+ 			.uc-notice-left{
+ 				padding-left:15px;
+ 				padding-right:30px;
+ 			}
+ 			
 		</style>
 		<?php 
 	}
@@ -366,7 +385,7 @@ class UniteCreatorAdminNotices{
 	* check dissmiss action
 	*/
 	public function checkDissmissAction(){
-		
+				
 		$dissmissKey = UniteFunctionsUC::getPostGetVariable("uc_dismiss_notice","", UniteFunctionsUC::SANITIZE_KEY);
 		if(empty($dissmissKey))
 			return(false);
@@ -387,14 +406,15 @@ class UniteCreatorAdminNotices{
 	 * init
 	 */
 	private function init(){
-		
+				
 		if(self::$isInited == true)
 			return(false);	
 					
 		if(GlobalsUC::$is_admin == false)
 			return(false);
-				
-		UniteProviderFunctionsUC::addAction("admin_init", array($this, "checkDissmissAction"));
+		
+		$this->checkDissmissAction();
+		
 		
 		UniteProviderFunctionsUC::addFilter("admin_notices", array($this, "putAdminNotices"),10,3);
 		

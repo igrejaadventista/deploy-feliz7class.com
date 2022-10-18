@@ -429,6 +429,27 @@ class UniteCreatorAddonViewChildParams{
 		
 		$arrParams[] = $this->createChildParam_code($key, $text);
 		
+		//----- get term image ------
+		
+		$key = "get_term_image()";
+		$text = "
+{# get the image fields out of the term.  ucfunc(\"get_term_image\",id,metakey) #}
+{# if id is null - get from current term #}
+
+{% set image = ucfunc(\"get_term_image\",10,\"attachment_id\") %}
+
+{% if user is not empty %}
+	{{printVar(image)}}
+
+{% else %}
+
+	no image found
+
+{% endif %}
+";
+		
+		$arrParams[] = $this->createChildParam_code($key, $text);
+		
 
 		//----- hide id's in css ------
 
@@ -443,10 +464,12 @@ class UniteCreatorAddonViewChildParams{
 		
 		
 		
+		
 		//----- output ------
 		
 		return($arrParams);
 	}
+	
 	
 
 	/**
@@ -1063,6 +1086,24 @@ console.log(arrItems);
 	    return($arrParam);
 	}
 	
+	/**
+	 * create add child products param
+	 */
+	private function createWooPostParam_putAttributes(){
+		
+		$strCode = "";
+		
+		$strCode .= "{%set attributes = ucfunc(\"get_product_attributes\",[param_prefix].id) %}\n\n";
+		
+		$strCode .= "{% for attribute in attributes %}\n";
+		$strCode .= "  <p>{{attribute}}</p>\n";
+		$strCode .= "{% endfor %}\n";
+		
+	    $arrParam = $this->createChildParam("putWooAttributes", null, array("raw_insert_text"=>$strCode));
+		
+	    return($arrParam);
+	}
+	
 	
 	/**
 	 * check and add woo post params
@@ -1081,6 +1122,7 @@ console.log(arrItems);
 		
 		$arrParams[] = $this->createWooPostParam_getChildProducts();
 		$arrParams[] = $this->createWooPostParam_putVariations();
+		$arrParams[] = $this->createWooPostParam_putAttributes();
 		$arrParams[] = $this->createWooPostParam_putProductGallery();
 		$arrParams[] = $this->createWooPostParam_getEndpoints();
 		

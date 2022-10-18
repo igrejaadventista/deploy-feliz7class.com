@@ -121,7 +121,7 @@ class UniteProviderFunctionsUC{
 		
 		$uploadsBaseDir = UniteFunctionsUC::getVal($arrUploads, "basedir");
 		$uploadsBaseUrl = UniteFunctionsUC::getVal($arrUploads, "baseurl");
-						
+				
 		$urlBase = null;
 		if(is_dir($uploadsBaseDir)){
 			$pathBase = UniteFunctionsUC::addPathEndingSlash($uploadsBaseDir);

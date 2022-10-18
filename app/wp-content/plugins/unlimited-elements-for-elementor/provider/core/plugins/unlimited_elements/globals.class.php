@@ -17,7 +17,7 @@ class GlobalsUnlimitedElements{
 	public static $showAdminNotice = false;
 	
 	public static $arrAdminNotice = array(
-		"id"=>"doubly1",
+		"id"=>"doubly2",
 		"text"=>"temp text",		//real text goes from event
 		//"banner"=>"birthday-3-banner.png",
 		"type"=>"simple",
@@ -87,16 +87,48 @@ class GlobalsUnlimitedElements{
    	public static $urlTemplatesList;
    	public static $renderingDynamicData;
    	
+   	
+   	/**
+   	 * set doubly notice text
+   	 */
+   	private static function setDoublyNoticeText(){
+   		
+   		$urlInstallDoubly = UniteFunctionsWPUC::getInstallPluginLink("doubly");
+   				
+   		$urlImage = GlobalsUC::$urlPluginImages."logo-circle.svg";
+   		
+		$textDoubly = "
+			<div class='uc-notice-wrapper'>
+			<div class='uc-notice-left'>
+				<img src='{$urlImage}' width='100'>
+			</div>
+			<div class='uc-notice-right'>
+				<div class='uc-notice-header'>Live Copy Paste from Unlimited Elements</div>
+				
+				<div class='uc-notice-middle'>
+					Did you know that now you can copy fully designed sections from Unlimited Elements to your website for FREE? <br> 
+					If you want to try then install our new plugin called Doubly. <br>
+				</div>
+				
+				<a class='uc-notice-button button button-primary' href='{$urlInstallDoubly}'>Install Doubly Now</a>
+			</div>
+			</div>
+		";
+   		
+   		self::$arrAdminNotice["text"] = $textDoubly;
+   		
+   	}
+   	
+   	
    	/**
    	 * on admin init
    	 */
    	public static function onAdminInit(){
-
-   		$urlInstallDoubly = UniteFunctionsWPUC::getInstallPluginLink("doubly");
+		
+   		if(self::$showAdminNotice == false)
+   			return(false);
    		
-   		$textDoubly = "Unlimited Elements Notice - Do you know, you can copy sections from our site using our Doubly plugin. <a href='{$urlInstallDoubly}'>Install Doubly Now</a>";
-   		
-   		self::$arrAdminNotice["text"] = $textDoubly;
+   		self::setDoublyNoticeText();
    			
    	}
    	
@@ -105,6 +137,10 @@ class GlobalsUnlimitedElements{
    	 * init globals
    	 */
    	public static function initGlobals(){
+   		
+   		//remove me
+   		//if(GlobalsUC::$inDev == true)
+   			//self::$showAdminNotice = true;
    		
    		self::$urlTemplatesList = admin_url("edit.php?post_type=elementor_library&tabs_group=library");
 		

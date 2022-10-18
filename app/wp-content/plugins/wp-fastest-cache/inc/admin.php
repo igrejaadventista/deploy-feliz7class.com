@@ -2038,7 +2038,14 @@
 				    </div>
 
 				    <div class="tab8" style="padding-left:20px;">
-				    	<h2 style="padding-bottom:10px;"><?php _e("Database Cleanup", "wp-fastest-cache"); ?></h2>
+				    	<h2 style="padding-bottom:10px;display: inline-block;float: left;width: 48%;"><?php _e("Database Cleanup", "wp-fastest-cache"); ?></h2>
+
+				    	<?php
+				    		if(file_exists(WPFC_WP_PLUGIN_DIR."/wp-fastest-cache-premium/pro/templates/db-auto-cleanup.php")){
+				    			include_once WPFC_WP_PLUGIN_DIR."/wp-fastest-cache-premium/pro/templates/db-auto-cleanup.php";
+				    		}
+				    	?>
+
 				    	<div>
 
 			    		<?php if(!$this->isPluginActive("wp-fastest-cache-premium/wpFastestCachePremium.php")){ ?>
@@ -2048,6 +2055,11 @@
 				    				}
 				    				div.tab8 .integration-page{
 				    					opacity: 0.3 !important;
+				    					pointer-events: none !important;
+				    				}
+				    				select#wpfc-auto-cleanup-option{
+				    					opacity: 0.3 !important;
+				    					pointer-events: none !important;
 				    				}
 				    			</style>
 				    			

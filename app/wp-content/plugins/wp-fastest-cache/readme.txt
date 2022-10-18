@@ -4,7 +4,7 @@ Donate link: http://profiles.wordpress.org/emrevona/
 Tags: cache, Optimize, performance, wp-cache, core web vitals
 Requires at least: 3.3
 Tested up to: 6.0
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -130,6 +130,10 @@ WP Fastest Cache is compatible with most popular plugins such as Contact Form 7,
 18. Database Cleanup
 
 == Changelog ==
+
+= 1.0.6 =
+* to serve sources via cdn for excluded pages if cdn is enabled
+* to fix PHP Notice: Undefined offset: -1 in js-utilities.php  on line 48
 
 = 1.0.5 =
 * to fix E_NOTICE: Undefined variable: path in wpFastestCache.php on line 2142

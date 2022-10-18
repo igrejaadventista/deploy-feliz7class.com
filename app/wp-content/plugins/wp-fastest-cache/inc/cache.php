@@ -355,6 +355,8 @@
 				}
 
 				if($this->exclude_page()){
+					ob_start(array($this, "cdn_rewrite"));
+					
 					//echo "<!-- Wp Fastest Cache: Exclude Page -->"."\n";
 					return 0;
 				}
@@ -694,7 +696,10 @@
 
 
 			if($this->exclude_page($buffer)){
-				$buffer = preg_replace('/<\!--WPFC_PAGE_TYPE_[a-z]+-->/i', '', $buffer);	
+				$buffer = preg_replace('/<\!--WPFC_PAGE_TYPE_[a-z]+-->/i', '', $buffer);
+
+				$buffer = $this->cdn_rewrite($buffer);
+
 				return $buffer;
 			}
 

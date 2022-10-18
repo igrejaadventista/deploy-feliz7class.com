@@ -905,6 +905,8 @@ class UniteCreatorTemplateEngineWork{
 			break;
 			case "get_term_image":
 				
+				//termID, meta key
+				
 				$arrImage = UniteFunctionsWPUC::getTermImage($arg1, $arg2);
 				
 				return($arrImage);
@@ -991,6 +993,37 @@ class UniteCreatorTemplateEngineWork{
 				
 				HelperHtmlUC::putDocReadyEndJS($widgetID);
 				
+			break;
+			case "get_product_attributes":
+				
+				$objWoo = new UniteCreatorWooIntegrate();
+				
+				$arrAttributes = $objWoo->getProductAttributes($arg1);
+				
+				return($arrAttributes);
+				
+			break;
+			case "get_current_term_id":
+				
+				$termID = UniteFunctionsWPUC::getCurrentTermID();
+				
+				return($termID);
+			break;
+			case "put_next_post_link":
+				
+				next_post_link();
+				
+			break;
+			case "put_prev_post_link":
+				
+				previous_post_link();
+				
+			break;
+			case "get_nextprev_post_data":
+				
+				$data = UniteFunctionsWPUC::getNextPrevPostData($arg1, $arg2);
+				
+				return($data);
 			break;
 			default:
 				
@@ -1167,7 +1200,7 @@ class UniteCreatorTemplateEngineWork{
 		
 		if(class_exists("Twig_Loader_Array") == false)
 			UniteFunctionsUC::throwError("Twig template engine not loaded. Please check if it collides with some other plugin that also loading twig engine.");
-			
+					
 		$loader = new Twig_Loader_Array($this->arrTemplates);
 		
 		$arrOptions = array();

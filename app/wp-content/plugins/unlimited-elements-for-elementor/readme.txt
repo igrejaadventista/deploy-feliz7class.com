@@ -1230,6 +1230,35 @@ Note : This plugin works with Elementor. Make sure you have [Elementor](https://
 
 == Changelog ==
 
+
+version 1.5.33:
+
+* Fix: fixed avoid duplicates with filters
+* Fix: fixed select dropdown filter js
+* Feature: added avoid duplicates option to manual posts selection
+
+
+
+version 1.5.32: 2022-10-11
+
+* Fix: fixed some ajax pagination issues
+* Fix: fixed pagination widget appearance on archive ajax pages with filters
+* Fix: added twig functionality to put product attributes text
+* Fix: fixed export with images not worked in some cases
+* Fix: made some protection with ezcache plugin integration and filtering
+* Fix: fixed some small php bug with this month post selection
+* Fix: fixed some visible and hidden filters collision
+* Fix: fixed terms select in terms filter on history back click in filters
+* Fix: set child filter always first unselected
+* Fix: set option for the tabs filter to be unselected
+* Fix: fixed the pagination numbers if exclude offset chosen
+
+* Feature: added multiple taxonomy terms in term selection
+* Feature: added query id in terms selection
+* Feature: added functionality for next / prev post
+
+
+
 version 1.5.31: 2022-09-20
 
 * Fix: fixed thumbs gallery
